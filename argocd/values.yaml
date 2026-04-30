@@ -1,0 +1,44 @@
+#--------------------------------------------------------------------------------------------------
+# GLOBAL CONFIGURATION
+global:
+  imagePullSecrets: []
+  imagePullPolicy: null
+  imageRegistry: null
+  storageClass: null
+  ingressClassName: null
+  labels: {}
+  annotations: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraDeploy: []
+
+#--------------------------------------------------------------------------------------------------
+# GENERAL CONFIGURATION
+labels: {}
+annotations: {}
+extraDeploy: []
+
+#--------------------------------------------------------------------------------------------------
+# IMAGE CONFIGURATION
+images:
+  argocd:
+    registry: docker.io
+    repository: argoproj/argo-cd
+    tag: null
+    digest: null
+    imagePullPolicy: Always
+    imagePullSecrets: []
+  dexidp:
+    registry: docker.io
+    repository: dexidp/dex
+    tag: v2.27.0
+    digest: null
+    imagePullPolicy: Always
+    imagePullSecrets: []
+  redis:
+    registry: docker.io
+    repository: redis
+    tag: 6.2.6
+    digest: null
+    imagePullPolicy: Always
+    imagePullSecrets: []

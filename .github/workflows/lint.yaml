@@ -1,0 +1,28 @@
+name: Lint Chart
+
+on:
+  push:
+    branches: 
+      - '*'
+    paths:
+      - 'argocd/**'
+      - '.testing/**'
+      - '.github/**'
+  pull_request:
+    branches: 
+      - '*' 
+    paths:
+      - 'argocd/**'
+      - '.testing/**'
+      - '.github/**'
+
+jobs:
+  version:
+    uses: ./.github/workflows/_versioning.yaml
+    with:
+      gitversion_file: ".github/gitversion/GitVersion.yml"
+  lint:
+    uses: ./.github/workflows/_validation.yaml
+    with:
+      chart_dir: "argocd"
+      unittests_dir: ".testing"

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: argocd
+description: A Helm chart for deploying ArgoCD.
+type: application
+version: 0.0.1
+appVersion: v3.3.8
+kubeVersion: ">=1.25.0-0"
+home: "https://github.com/jnnkrdb/argocd-helm"
+maintainers:
+- name: jnnkrdb
+  url: https://github.com/jnnkrdb
+keywords:
+- argoproj
+- argocd
+- gitops
