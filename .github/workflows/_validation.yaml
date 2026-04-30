@@ -32,8 +32,7 @@ jobs:
         run: |
           if [ -d "${{ inputs.unittests_dir }}/" ]; then
             find ${{ inputs.unittests_dir }} -maxdepth 1 -iname "*.yaml" -type f -print0 | xargs -0 -I{} /bin/sh -c \
-              "set -eo pipefail;
-              echo '########################### Unit Test - {}';
+              "echo '########################### Unit Test - {}';
               helm template ${{ inputs.chart_dir }} --debug --version 0.0.0 -f {}";
           fi
 
