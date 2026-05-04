@@ -2,19 +2,13 @@
 {{/*
 Return the proper image name.
 If image tag and digest are not defined, termination fallbacks to chart appVersion.
-{{ include "argocd.image" ( dict "imageRoot" .Values.path.to.the.image "global" .Values.global "chart" .Chart ) }}
+{{ include "argocd.image" ( dict "imageRoot" .Values.path.to.the.image "global" .Values.global ) }}
 */}}
 {{- define "argocd.image" -}}
 {{- $registryName := default .imageRoot.registry ((.global).imageRegistry) -}}
 {{- $repositoryName := .imageRoot.repository -}}
 {{- $separator := ":" -}}
 {{- $termination := .imageRoot.tag | toString -}}
-
-{{- if not .imageRoot.tag }}
-  {{- if .chart }}
-    {{- $termination = .chart.AppVersion | toString -}}
-  {{- end -}}
-{{- end -}}
 
 {{- if .imageRoot.digest }}
     {{- $separator = "@" -}}

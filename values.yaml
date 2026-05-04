@@ -24,7 +24,7 @@ images:
   argocd:
     registry: docker.io
     repository: argoproj/argo-cd
-    tag: null
+    tag: v3.3.8
     digest: null
     imagePullPolicy: Always
     imagePullSecrets: []
@@ -38,7 +38,173 @@ images:
   redis:
     registry: docker.io
     repository: redis
-    tag: 6.2.6
+    tag: 8.2.3-alpine
     digest: null
     imagePullPolicy: Always
     imagePullSecrets: []
+
+#--------------------------------------------------------------------------------------------------
+# ARGOCD SERVER CONFIGURATION
+argocdserver:
+  labels: {}
+  annotations: {}
+
+  pod:
+    labels: {}
+    annotations: {}
+
+#--------------------------------------------------------------------------------------------------
+# REDIS CONFIGURATION
+redis:
+  labels: {}
+  annotations: {}
+
+  workload:
+    annotations: {}
+    labels: {}
+    kind: Deployment # either Deployment, StatefulSet or DaemonSet
+    revisionHistoryLimit: 1
+    replicaCount: 1
+    minReadySeconds: 10
+    serviceName: null
+    podManagementPolicy: null
+    persistentVolumeClaimRetentionPolicy: null
+    progressDeadlineSeconds: null
+    updateStrategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 0
+        maxUnavailable: 1
+
+  pod:
+    # ------------- more advanced configs
+    # Scheduling constraints
+    affinity: {}
+    tolerations: []
+    nodeSelector: {}
+
+    # Network
+    hostNetwork: null
+    dnsPolicy: null
+    dnsConfig: {}
+    hostAliases: []
+
+    nodeName: null
+    hostname: null
+    subdomain: null
+    automountServiceAccountToken: null
+    terminationGracePeriodSeconds: null
+
+    # Pod-level security context (applies to all containers unless container-level overrides)
+    securityContext: {}
+
+    # Runtime, priority, scheduler
+    runtimeClassName: null
+    priorityClassName: null
+    schedulerName: null
+
+    # Process & service-related settings
+    shareProcessNamespace: null
+    enableServiceLinks: null
+
+    # ------------- more frequently used configs
+    labels: {}
+    annotations: {}
+    imagePullSecrets: []
+    initContainers: []
+    extraVolumes: []
+    extraVolumeMounts: []
+    sidecarContainers: []
+    extraEnvs: []
+    extraEnvFrom: []
+
+  containers:
+    secretinit:
+      command:
+      - argocd
+      args:
+      - admin
+      - redis-initial-password
+      workingDir: null
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      extraEnvs: []
+      extraEnvFrom: []
+      extraVolumeMounts: []
+    redis:
+      command: []
+      args:
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --requirepass $(REDIS_PASSWORD)
+      workingDir: null
+      resources:
+        requests:
+          #cpu: 250m
+          memory: 128Mi
+        limits:
+          #cpu: 500m
+          memory: 256Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      extraEnvs: []
+      extraEnvFrom: []
+      extraVolumeMounts: []
+      startupProbe:
+        tcpSocket:
+          port: redis
+        periodSeconds: 5
+        timeoutSeconds: 2
+        successThreshold: 1
+        failureThreshold: 30
+      livenessProbe:
+        tcpSocket:
+          port: redis
+        periodSeconds: 10
+        timeoutSeconds: 2
+        successThreshold: 1
+        failureThreshold: 3
+      readinessProbe:
+        tcpSocket:
+          port: redis
+        periodSeconds: 10
+        timeoutSeconds: 2
+        successThreshold: 1
+        failureThreshold: 3
+
+  service:
+    annotations: {}
+    labels: {}
+    type: ClusterIP
+    clusterIP: null
+    ports:
+      redis:
+        port: 6379
+        protocol: TCP
+        nodePort: null
+        hostPort: null
+    publishNotReadyAddresses: null
+    ipFamilyPolicy: null # SingleStack
+    ipFamilies: []
+
+  pdb:
+    enabled: false
+    annotations: {}
+    labels: {}
+    unhealthyPodEvictionPolicy: AlwaysAllow
+    minAvailable: 1
+    maxUnavailable: null

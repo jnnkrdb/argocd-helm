@@ -1,0 +1,53 @@
+{{- $v := .Values -}}
+{{- $global := $v.global -}}
+{{- $main := $v.redis -}}
+{{- $deploy := $main.workload -}}
+{{- $pod := $main.pod -}}
+
+{{- if (eq $deploy.kind "Deployment") -}}
+--- # --------------------------------------------------------------------------------- Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "argocd.fullname" . }}-redis
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.defaultLabels" . | nindent 4 }}
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.labels 
+                          $main.labels 
+                          $v.labels 
+                          $deploy.labels) ) | nindent 4 }}
+  annotations:
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.annotations 
+                          $main.annotations 
+                          $v.annotations 
+                          $deploy.annotations) ) | nindent 4 }}
+spec:
+  {{- with $deploy.replicaCount }}
+  replicas: {{ . }}
+  {{- end }}
+  {{- with $deploy.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with $deploy.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
+  {{- with $deploy.progressDeadlineSeconds }}
+  progressDeadlineSeconds: {{ . }}
+  {{- end }}
+  {{- with $deploy.updateStrategy }}
+  strategy:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: redis
+      {{- include "argocd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- include "argocd.podMeta" ( dict "name" "redis" "pod" $pod "context" $ ) | nindent 6 }}
+    spec:
+      {{- include "argocd.redis.podSpec" . | nindent 6 }}
+{{- end -}}

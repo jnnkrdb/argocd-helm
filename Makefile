@@ -27,11 +27,11 @@ clean:
 
 # helm testing
 
-lint: dep $(TEST_FILES)
+lint: clean dep $(TEST_FILES)
 	$(foreach v,$(TEST_FILES),echo "$(v)" && helm lint $(CHART_PATH)/ -f $(v);)
 
-template: resultsdir dep $(TEST_FILES)
+template: clean resultsdir dep $(TEST_FILES)
 	$(foreach v,$(TEST_FILES),echo "$(v)" && helm template --debug $(CHART_PATH)/ -f $(v) > $(RESULT_PATH)/$(subst $(TEST_FILES_PATH)/,,$(v));)
 
-package: resultsdir dep
+package: clean resultsdir dep
 	helm package $(CHART_PATH)/ --destination $(RESULT_PATH)

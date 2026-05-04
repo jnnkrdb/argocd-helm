@@ -24,7 +24,7 @@ Create chart name and version as used by the chart label.
 {{/*
 Common labels
 */}}
-{{- define "argocd.labels" -}}
+{{- define "argocd.defaultLabels" -}}
 helm.sh/chart: {{ include "argocd.chart" . }}
 {{ include "argocd.selectorLabels" . }}
 {{- if .Chart.AppVersion }}

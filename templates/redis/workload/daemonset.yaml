@@ -1,0 +1,47 @@
+{{- $v := .Values -}}
+{{- $global := $v.global -}}
+{{- $main := $v.redis -}}
+{{- $ds := $main.workload -}}
+{{- $pod := $main.pod -}}
+
+{{- if (eq $ds.kind "DaemonSet") -}}
+--- # --------------------------------------------------------------------------------- DaemonSet
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "argocd.fullname" . }}-redis
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.defaultLabels" . | nindent 4 }}
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.labels 
+                          $main.labels 
+                          $v.labels 
+                          $ds.labels) ) | nindent 4 }}
+  annotations:
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.annotations 
+                          $main.annotations 
+                          $v.annotations 
+                          $ds.annotations) ) | nindent 4 }}
+spec:
+  {{- with $ds.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with $ds.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
+  {{- with $ds.updateStrategy }}
+  updateStrategy:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: redis
+      {{- include "argocd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- include "argocd.podMeta" ( dict "name" "redis" "pod" $pod "context" $ ) | nindent 6 }}
+    spec:
+      {{- include "argocd.redis.podSpec" . | nindent 6 }}
+{{- end -}}
