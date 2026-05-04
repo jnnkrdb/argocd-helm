@@ -24,3 +24,7 @@
 
 # ignore test files
 ignore/
+.github/
+.testing/
+Makefile
+.gitignore

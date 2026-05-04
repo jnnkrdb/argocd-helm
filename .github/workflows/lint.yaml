@@ -4,17 +4,15 @@ on:
   push:
     branches: 
       - '*'
-    paths:
-      - 'argocd/**'
-      - '.testing/**'
-      - '.github/**'
+    paths-ignore:
+      - '*.md'
+      - 'Makefile'
   pull_request:
     branches: 
       - '*' 
-    paths:
-      - 'argocd/**'
-      - '.testing/**'
-      - '.github/**'
+    paths-ignore:
+      - '*.md'
+      - 'Makefile'
 
 jobs:
   version:
@@ -24,5 +22,5 @@ jobs:
   lint:
     uses: ./.github/workflows/_validation.yaml
     with:
-      chart_dir: "argocd"
+      chart_dir: "."
       unittests_dir: ".testing"

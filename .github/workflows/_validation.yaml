@@ -4,7 +4,7 @@ on:
       chart_dir:
         required: false
         type: string
-        default: "argocd"
+        default: "."
       unittests_dir:
         required: false
         type: string
