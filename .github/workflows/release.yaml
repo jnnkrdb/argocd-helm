@@ -2,13 +2,15 @@ name: Release Charts
 
 on:
   push:
-    branches: 
-      - 'master'
-      - 'main'
-    paths-ignore:
-      - '*.md'
-      - 'Makefile'
-      - '.testing/**'
+    tags:
+      - '*'
+    #branches: 
+    #  - 'master'
+    #  - 'main'
+    #paths-ignore:
+    #  - '*.md'
+    #  - 'Makefile'
+    #  - '.testing/**'
 
 jobs:
   release:
@@ -28,5 +30,7 @@ jobs:
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
+        with:
+          charts_dir: "."
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

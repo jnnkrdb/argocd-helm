@@ -14,13 +14,33 @@ on:
       - '*.md'
       - 'Makefile'
 
+env:
+  HELM_EXPERIMENTAL_OCI: 1
+  CHART_DIR: "."
+  UNITTESTS_DIR: ".testing"
+
 jobs:
-  version:
-    uses: ./.github/workflows/_versioning.yaml
-    with:
-      gitversion_file: ".github/gitversion/GitVersion.yml"
-  lint:
-    uses: ./.github/workflows/_validation.yaml
-    with:
-      chart_dir: "."
-      unittests_dir: ".testing"
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Update Dependencies
+        run: helm dependency update ${{ env.CHART_DIR }}/ --debug
+            
+      - name: Lint
+        run: |
+          if [ -d "${{ env.UNITTESTS_DIR }}/" ]; then
+            find ${{ env.UNITTESTS_DIR }} -maxdepth 1 -iname "*.yaml" -type f -print0 | xargs -0 -I{} /bin/sh -c \
+              "echo '########################### Unit Test - {}';
+              helm lint ${{ env.CHART_DIR }} --debug -f {}";
+          fi
+
+      - name: Template
+        run: |
+          if [ -d "${{ env.UNITTESTS_DIR }}/" ]; then
+            find ${{ env.UNITTESTS_DIR }} -maxdepth 1 -iname "*.yaml" -type f -print0 | xargs -0 -I{} /bin/sh -c \
+              "echo '########################### Unit Test - {}';
+              helm template ${{ env.CHART_DIR }} --debug --version 0.0.0 -f {}";
+          fi
