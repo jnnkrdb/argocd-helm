@@ -10,11 +10,34 @@ on:
       - 'Makefile'
       - '.testing/**'
 
+env:
+  GITVERSION_FILE: ".github/gitversion/GitVersion.yml"
+
 jobs:
   version:
-    uses: ./.github/workflows/_versioning.yaml
-    with:
-      gitversion_file: ".github/gitversion/GitVersion.yml"
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.version.outputs.semver }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+          
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+        with:
+          useConfigFile: true
+          configFilePath: ${{ env.GITVERSION_FILE }}
+
+      - id: version
+        run: echo "semver=${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_OUTPUT
   create-tag:
     permissions:
       contents: write
