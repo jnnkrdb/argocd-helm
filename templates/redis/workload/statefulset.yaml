@@ -1,0 +1,96 @@
+{{- $v := .Values -}}
+{{- $global := $v.global -}}
+{{- $main := $v.redis -}}
+{{- $sts := $main.workload -}}
+{{- $pod := $main.pod -}}
+{{- $svc := $main.service -}}
+
+{{- if (eq $sts.kind "StatefulSet") -}}
+{{- if not $sts.serviceName -}}
+--- # --------------------------------------------------------------------------------- Headless Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "argocd.fullname" . }}-redis-headless
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.defaultLabels" . | nindent 4 }}
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.labels 
+                          $main.labels 
+                          $v.labels) ) | nindent 4 }}
+  annotations:
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.annotations 
+                          $main.annotations 
+                          $v.annotations ) ) | nindent 4 }}
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    {{- range $portName, $portSpecs := $svc.ports }}
+    - name: {{ $portName | quote }}
+      protocol: {{ $portSpecs.protocol }}
+      targetPort: {{ $portSpecs.port }}
+      port: {{ $portSpecs.port }}
+    {{- end }}
+  selector:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.selectorLabels" . | nindent 4 }}
+{{- end }}
+--- # --------------------------------------------------------------------------------- Statefulset
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "argocd.fullname" . }}-redis
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.defaultLabels" . | nindent 4 }}
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.labels 
+                          $main.labels 
+                          $v.labels 
+                          $sts.labels) ) | nindent 4 }}
+  annotations:
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.annotations 
+                          $main.annotations 
+                          $v.annotations 
+                          $sts.annotations) ) | nindent 4 }}
+spec:
+  {{- if not $sts.serviceName }}
+  serviceName: {{ include "argocd.fullname" . }}-redis-headless
+  {{- else }}
+  {{- with $sts.serviceName }}
+  serviceName: {{ . | quote }}
+  {{- end }}
+  {{- end }}
+  {{- with $sts.replicaCount }}
+  replicas: {{ . }}
+  {{- end }}
+  {{- with $sts.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with $sts.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
+  {{- with $sts.podManagementPolicy }}
+  podManagementPolicy: {{ . }}
+  {{- end }}
+  {{- with $sts.persistentVolumeClaimRetentionPolicy }}
+  persistentVolumeClaimRetentionPolicy: 
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
+  {{- with $sts.updateStrategy }}
+  updateStrategy:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: redis
+      {{- include "argocd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- include "argocd.podMeta" ( dict "name" "redis" "pod" $pod "context" $ ) | nindent 6 }}
+    spec:
+      {{- include "argocd.redis.podSpec" . | nindent 6 }}
+{{- end -}}

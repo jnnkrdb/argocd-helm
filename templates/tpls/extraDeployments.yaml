@@ -1,0 +1,12 @@
+{{- if .Values.global.extraDeploy }}
+{{- range .Values.global.extraDeploy }}
+---
+{{ . | toYaml }}
+{{- end }}
+{{- end }}
+{{- if .Values.extraDeploy }}
+{{- range .Values.extraDeploy }}
+---
+{{ . | toYaml }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,37 @@
+on:
+  workflow_call:
+    inputs:
+      chart_dir:
+        required: false
+        type: string
+        default: "."
+      unittests_dir:
+        required: false
+        type: string
+        default: ".testing"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Update Dependencies
+        run: helm dependency update ${{ inputs.chart_dir }}/ --debug
+            
+      - name: Lint
+        run: |
+          if [ -d "${{ inputs.unittests_dir }}/" ]; then
+            find ${{ inputs.unittests_dir }} -maxdepth 1 -iname "*.yaml" -type f -print0 | xargs -0 -I{} /bin/sh -c \
+              "echo '########################### Unit Test - {}';
+              helm lint ${{ inputs.chart_dir }} --debug -f {}";
+          fi
+
+      - name: Template
+        run: |
+          if [ -d "${{ inputs.unittests_dir }}/" ]; then
+            find ${{ inputs.unittests_dir }} -maxdepth 1 -iname "*.yaml" -type f -print0 | xargs -0 -I{} /bin/sh -c \
+              "echo '########################### Unit Test - {}';
+              helm template ${{ inputs.chart_dir }} --debug --version 0.0.0 -f {}";
+          fi

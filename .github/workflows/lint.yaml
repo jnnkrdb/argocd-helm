@@ -1,0 +1,26 @@
+name: Lint Chart
+
+on:
+  push:
+    branches: 
+      - '*'
+    paths-ignore:
+      - '*.md'
+      - 'Makefile'
+  pull_request:
+    branches: 
+      - '*' 
+    paths-ignore:
+      - '*.md'
+      - 'Makefile'
+
+jobs:
+  version:
+    uses: ./.github/workflows/_versioning.yaml
+    with:
+      gitversion_file: ".github/gitversion/GitVersion.yml"
+  lint:
+    uses: ./.github/workflows/_validation.yaml
+    with:
+      chart_dir: "."
+      unittests_dir: ".testing"

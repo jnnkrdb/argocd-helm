@@ -1,0 +1,103 @@
+redis:
+  pod:
+    imagePullSecrets:
+    - name: FROM-POD
+    # ------------- more advanced configs
+    # Scheduling constraints
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: webapp
+            topologyKey: kubernetes.io/hostname
+    tolerations:
+    - key: "node.kubernetes.io/unreachable"
+      operator: "Exists"
+      effect: "NoExecute"
+      tolerationSeconds: 300
+    nodeSelector:
+      kubernetes.io/os: linux
+
+    # Scheduling & identity
+    nodeName: "node01"
+    hostname: "host"
+    subdomain: "subdomain"
+    automountServiceAccountToken: true
+
+    # Network
+    hostNetwork: false
+    dnsPolicy: ClusterFirst
+    dnsConfig:
+      nameservers: [ "1.1.1.1" ]
+      searches: [ "example.local" ]
+      options:
+      - name: ndots
+        value: "2"
+    hostAliases:
+    - ip: "10.1.2.3"
+      hostnames:
+      - "my-custom-host"
+
+    readinessGates:
+    - conditionType: "Ready"
+    topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: webapp
+    # Pod-level security context (applies to all containers unless container-level overrides)
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 3000
+      runAsNonRoot: true
+      fsGroup: 2000
+      seLinuxOptions: {} # SELinux options (placeholder)
+      seccompProfile:
+        type: RuntimeDefault
+
+    # Runtime, priority, scheduler
+    runtimeClassName: "runc"
+    priorityClassName: "medium-priority"
+    priority: 100000
+    schedulerName: "default-scheduler"
+
+    # Process & service-related settings
+    shareProcessNamespace: false
+    enableServiceLinks: true
+    terminationGracePeriodSeconds: 30
+    activeDeadlineSeconds: 86400
+
+    # ------------- more frequently used configs
+    labels:
+      test: label
+    annotations:
+      test: annotation
+    initContainers:
+    - name: test-1
+      image: curlimages/curl:latest
+      command: [ "curl", "-f", "http://example.com/healthz" ]
+    - name: test-1
+      image: alpine:latest
+      command: [ "sh", "-c", "curl -f http://example.com/healthz" ]
+    extraVolumes:
+    - name: extra-volume-pod
+      emptyDir: {}
+    extraVolumeMounts:
+    - name: extra-volume-pod
+      mountPath: /extra-volume
+    sidecarContainers:
+    - name: sidecar
+      image: nginx:latest
+      ports:
+      - containerPort: 80
+    extraEnvs:
+    - name: EXTRA_ENV_POD
+      value: "extra_value"
+    extraEnvFrom:
+    - configMapRef:
+        name: extra-configmap-pod

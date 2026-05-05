@@ -1,0 +1,77 @@
+{{- $v := .Values -}}
+{{- $global := $v.global -}}
+{{- $main := $v.redis -}}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-{{ include "argocd.fullname" . }}-redis
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.defaultLabels" . | nindent 4 }}
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.labels 
+                          $main.labels 
+                          $v.labels ) ) | nindent 4 }}
+  annotations:
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.annotations 
+                          $main.annotations 
+                          $v.annotations ) ) | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sa-{{ include "argocd.fullname" . }}-redis
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.defaultLabels" . | nindent 4 }}
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.labels 
+                          $main.labels 
+                          $v.labels ) ) | nindent 4 }}
+  annotations:
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.annotations 
+                          $main.annotations 
+                          $v.annotations ) ) | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: sa-{{ include "argocd.fullname" . }}-redis
+subjects:
+  - kind: ServiceAccount
+    name: sa-{{ include "argocd.fullname" . }}-redis
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sa-{{ include "argocd.fullname" . }}-redis
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.defaultLabels" . | nindent 4 }}
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.labels 
+                          $main.labels 
+                          $v.labels ) ) | nindent 4 }}
+  annotations:
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.annotations 
+                          $main.annotations 
+                          $v.annotations ) ) | nindent 4 }}
+rules:
+  - apiGroups:
+      - ""
+    resourceNames:
+      - argocd-redis
+    resources:
+      - secrets
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create

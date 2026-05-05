@@ -1,0 +1,48 @@
+{{- $v := .Values -}}
+{{- $global := $v.global -}}
+{{- $main := $v.redis -}}
+{{- $svc := $main.service -}}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "argocd.fullname" . }}-redis
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "argocd.defaultLabels" . | nindent 4 }}
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.labels 
+                          $main.labels 
+                          $v.labels ) ) | nindent 4 }}
+  annotations:
+    {{- include "argocd.keyValues" ( 
+        dict "kvs" ( list $global.annotations 
+                          $main.annotations 
+                          $v.annotations ) ) | nindent 4 }}
+spec:
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: argocd-server
+              {{- include "argocd.selectorLabels" . | nindent 14 }}
+              #argocd.deployment/type: server
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: argocd-repo-server
+              {{- include "argocd.selectorLabels" . | nindent 14 }}
+              #argocd.deployment/type: repo-server
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: argocd-application-controller
+              {{- include "argocd.selectorLabels" . | nindent 14 }}
+              #argocd.deployment/type: application-controller
+      ports:
+        - port: {{ $svc.ports.redis.port }}
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: redis
+      {{- include "argocd.selectorLabels" . | nindent 6 }}
