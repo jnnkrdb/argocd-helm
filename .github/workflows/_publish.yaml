@@ -1,0 +1,61 @@
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: "Version to use for the tag and chart package (include leading 'v' if desired)"
+      chart_dir:
+        required: false
+        type: string
+        default: "."
+      create_release:
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.package.outputs.package }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Update Dependencies
+        run: helm dependency update ${{ inputs.chart_dir }}/ --debug
+        
+      - name: Package chart
+        id: package
+        run: |
+          mkdir -p dist
+          helm package ${{ inputs.chart_dir }} --version "${{ inputs.version }}" --destination dist
+          pkg=$(ls dist/*.tgz | head -n1)
+          echo "package=${pkg##*/}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: ${{ inputs.create_release }}
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ inputs.version }}
+          release_name: Release ${{ inputs.version }}
+          body: 'Automated release of version ${{ inputs.version }}'
+          draft: false
+          prerelease: false
+
+      - name: Upload chart to release
+        if: ${{ inputs.create_release }}
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/${{ steps.package.outputs.package }}
+          asset_name: ${{ steps.package.outputs.package }}
+          asset_content_type: application/gzip

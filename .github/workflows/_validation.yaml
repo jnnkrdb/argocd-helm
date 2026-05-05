@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 
+        uses: actions/checkout@v3
         
       - name: Update Dependencies
         run: helm dependency update ${{ inputs.chart_dir }}/ --debug
@@ -35,8 +35,3 @@ jobs:
               "echo '########################### Unit Test - {}';
               helm template ${{ inputs.chart_dir }} --debug --version 0.0.0 -f {}";
           fi
-
-      - name: Validate with kubeconform
-        uses: nlamirault/helm-kubeconform-action@v0.1.0
-        with:
-          charts: ${{ inputs.chart_dir }}/

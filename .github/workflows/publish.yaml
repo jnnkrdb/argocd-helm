@@ -1,0 +1,14 @@
+name: Publish Chart
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  publish:
+    uses: ./.github/workflows/_publish.yaml
+    with:
+      version: ${{ github.ref_name }}
+      chart_dir: "."
+      create_release: true 
